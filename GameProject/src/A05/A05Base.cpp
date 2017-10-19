@@ -2,10 +2,12 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_mixer.h>
+#include <time.h>
 
 //Game general information
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
+#define FPS 60
 
 /*typedef enum 
 {
@@ -36,9 +38,9 @@ int main(int, char*[]) {
 	// --- SPRITES ---
 	SDL_Texture *bgTexture{ IMG_LoadTexture(renderer, "../../res/img/bg.jpg") };
 	if (bgTexture == nullptr) throw "No s'han pogut crear les textures";
-	SDL_Texture *playerTexture{ IMG_LoadTexture(renderer, "../../res/img/kintoun.png") };
-	if (playerTexture == nullptr) throw "No s'han pogut crear les textures";
-	SDL_Rect playerRect{ 0,0,250,250 };
+	SDL_Texture *playerTextureSprt{ IMG_LoadTexture(renderer, "../../res/img/kintoun.png") };
+	if (playerTextureSprt == nullptr) throw "No s'han pogut crear les textures";
+	SDL_Rect playerRectSprt{ 0,0,250,250 };
 	SDL_Rect playerTarget{ 0,0,100,100 };
 
 	SDL_Rect bgRect{ 0,0,SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -46,19 +48,30 @@ int main(int, char*[]) {
 
 
 		// --- Animated Sprite ---
-
+	SDL_Texture *playerTexture{ IMG_LoadTexture(renderer, "../../res/img/sp01.png") };
+	SDL_Rect playerRect, playerPosition;
+	int textWidth, textHeight, frameWidth, frameHeight;
+	SDL_QueryTexture(playerTexture, NULL, NULL, &textWidth, &textHeight);
+	frameWidth = textWidth / 6;
+	frameHeight = textHeight / 1;
+	playerPosition.x = playerPosition.y = 0;
+	playerRect.x = playerRect.y = 0;
+	playerPosition.h = playerRect.h = frameHeight;
+	playerPosition.w = playerRect.w = frameWidth;
+	int frameTime = 0;
+	
 	// --- TEXT ---
 	TTF_Font *font{ TTF_OpenFont("../../res/ttf/saiyan.ttf", 80) };
 	if (font == nullptr) throw "No es pot inicialitzar the TTF_Font";
 	SDL_Surface *tmpSurf{ TTF_RenderText_Blended(font, "Ferran the game", SDL_Color{255,150,0,255}) };
 	if (tmpSurf == nullptr) TTF_CloseFont(font), throw "Unable to create the SDL text surface";
 	SDL_Texture *textTexture{ SDL_CreateTextureFromSurface(renderer, tmpSurf) };
-	SDL_Rect textRect{100, 50, tmpSurf->w, tmpSurf->h};
+	SDL_Rect textRect{SCREEN_WIDTH/3, 150, tmpSurf->w, tmpSurf->h};
 	SDL_FreeSurface(tmpSurf);
 	TTF_CloseFont(font);
 
 	// --- AUDIO ---
-	if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
+	/*if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
 		throw "Unable to initilize SDL_mixer audio system";
 	}
 
@@ -66,7 +79,7 @@ int main(int, char*[]) {
 	if (!soundtrack) throw "Unable to load the Mix_Music soundtrack";
 	Mix_VolumeMusic(MIX_MAX_VOLUME);
 	Mix_PlayMusic(soundtrack, -1);
-
+	*/
 	// --- GAME LOOP ---
 	SDL_Event event;
 	bool isRunning = true;
@@ -87,24 +100,36 @@ int main(int, char*[]) {
 
 
 		// UPDATE
-		playerRect.x += (playerTarget.x - playerRect.x)/10;
-		playerRect.y += (playerTarget.y - playerRect.y)/10;
+		playerRectSprt.x += (playerTarget.x - playerRectSprt.x)/10;
+		playerRectSprt.y += (playerTarget.y - playerRectSprt.y)/10;
+		frameTime++;
+		if (FPS / frameTime <= 9) 
+		{
+			frameTime = 0;
+			playerRect.x += frameWidth;
+			if (playerRect.x >= textWidth)
+			{
+				playerRect.x = 0;
+			}
+		}
 
 		// DRAW
 			//Background
 		SDL_RenderClear(renderer);
+		
 		SDL_RenderCopy(renderer, bgTexture, nullptr, &bgRect);
 		SDL_RenderCopy(renderer, textTexture, nullptr, &textRect);
-		SDL_RenderCopy(renderer, playerTexture, nullptr, &playerRect);
-		SDL_RenderPresent(renderer);
+		SDL_RenderCopy(renderer, playerTextureSprt, nullptr, &playerRectSprt);
+		//SDL_RenderPresent(renderer);
 			//Animated Sprite
+		SDL_RenderCopy(renderer, playerTexture, &playerRect, &playerPosition);
 		SDL_RenderPresent(renderer);
-
+		
 	}
 
 	// --- DESTROY ---
 	SDL_DestroyTexture(bgTexture);
-	SDL_DestroyTexture(playerTexture);
+	SDL_DestroyTexture(playerTextureSprt);
 	SDL_DestroyTexture(textTexture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
