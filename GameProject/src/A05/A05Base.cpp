@@ -92,6 +92,12 @@ int main(int, char*[]) {
 			case SDL_MOUSEMOTION:
 				playerTarget.x = event.motion.x - 125;
 				playerTarget.y = event.motion.y - 125;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
+					//
+				}
 			default:;
 			}
 		}
